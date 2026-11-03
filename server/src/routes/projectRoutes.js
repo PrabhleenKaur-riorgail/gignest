@@ -9,6 +9,7 @@ import {
   closeProject,
   deleteProject,
 } from '../controllers/projectController.js';
+import { submitBid, listProjectBids } from '../controllers/bidController.js';
 import { protect, authorize } from '../middleware/auth.js';
 
 const router = Router();
@@ -19,6 +20,9 @@ router.get('/mine', protect, authorize('client'), listMyProjects);
 
 router.get('/', listProjects);
 router.post('/', protect, authorize('client'), createProject);
+
+router.post('/:projectId/bids', protect, authorize('freelancer'), submitBid);
+router.get('/:projectId/bids', protect, authorize('client', 'admin'), listProjectBids);
 
 router.get('/:id', getProject);
 router.put('/:id', protect, authorize('client'), updateProject);

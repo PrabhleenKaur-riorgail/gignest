@@ -5,6 +5,8 @@ import morgan from 'morgan';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
+import bidRoutes from './routes/bidRoutes.js';
+import contractRoutes from './routes/contractRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -23,6 +25,8 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/bids', bidRoutes);
+app.use('/api/contracts', contractRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

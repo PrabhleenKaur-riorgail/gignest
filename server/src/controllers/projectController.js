@@ -1,7 +1,8 @@
 import Project from '../models/Project.js';
+import Bid from '../models/Bid.js';
 import AppError from '../utils/AppError.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import { CATEGORIES, PROJECT_STATUS } from '../utils/constants.js';
+import { CATEGORIES, PROJECT_STATUS, BID_STATUS } from '../utils/constants.js';
 import { str, escapeRegex, normalizeSkills, parsePagination } from '../utils/validators.js';
 
 const CLIENT_FIELDS = 'name avatar company ratingAverage ratingCount';
@@ -192,6 +193,8 @@ export const closeProject = asyncHandler(async (req, res) => {
   }
   project.status = PROJECT_STATUS.CLOSED;
   await project.save();
+  // Closing a project rejects every bid that was still waiting.
+  await Bid.updateMany({ project: project._id, status: BID_STATUS.PENDING }, { status: BID_STATUS.REJECTED });
   res.json({ project });
 });
 
@@ -208,6 +211,7 @@ export const deleteProject = asyncHandler(async (req, res) => {
     throw new AppError('Projects that are in progress or completed cannot be deleted', 400);
   }
 
+  await Bid.deleteMany({ project: project._id });
   await project.deleteOne();
   res.json({ message: 'Project deleted' });
 });
