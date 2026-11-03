@@ -1,20 +1,14 @@
 import 'dotenv/config';
-import express from 'express';
-import cors from 'cors';
-import helmet from 'helmet';
-import morgan from 'morgan';
+import app from './app.js';
 import connectDB from './config/db.js';
 
-const app = express();
-
-app.use(helmet());
-app.use(cors({ origin: process.env.CLIENT_URL, credentials: true }));
-app.use(express.json());
-app.use(morgan('dev'));
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', app: 'GigNest API' });
-});
+// Stop early with a clear message if the .env file is incomplete.
+for (const key of ['MONGO_URI', 'JWT_SECRET']) {
+  if (!process.env[key]) {
+    console.error(`Missing ${key} in .env file`);
+    process.exit(1);
+  }
+}
 
 const PORT = process.env.PORT || 5000;
 
