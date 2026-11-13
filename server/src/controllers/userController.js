@@ -9,7 +9,7 @@ export const getPublicProfile = asyncHandler(async (req, res) => {
     _id: req.params.id,
     isBlocked: false,
     role: { $ne: 'admin' },
-  }).select('-email -isBlocked');
+  }).select('-email -isBlocked -walletBalance');
 
   if (!user) throw new AppError('User not found', 404);
   res.json({ user });

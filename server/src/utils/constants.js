@@ -41,3 +41,14 @@ export const MILESTONE_STATUS = {
 
 // Percentage the platform keeps from each released milestone (can be set in .env).
 export const PLATFORM_FEE_PERCENT = Number(process.env.PLATFORM_FEE_PERCENT) || 5;
+
+export const TRANSACTION_TYPE = {
+  FUND: 'FUND', // client pays money into escrow for a milestone
+  RELEASE: 'RELEASE', // escrow money goes to the freelancer (minus platform fee)
+};
+
+export const PAYMENT_STATUS = {
+  CREATED: 'CREATED', // order made, waiting for payment
+  PAID: 'PAID',
+  FAILED: 'FAILED',
+};

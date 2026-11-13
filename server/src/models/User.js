@@ -41,6 +41,9 @@ const userSchema = new mongoose.Schema(
     ratingAverage: { type: Number, default: 0 },
     ratingCount: { type: Number, default: 0 },
 
+    // Money the freelancer has earned (after platform fee)
+    walletBalance: { type: Number, default: 0, min: 0 },
+
     isBlocked: { type: Boolean, default: false },
   },
   { timestamps: true }
