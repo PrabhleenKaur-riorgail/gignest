@@ -3,7 +3,8 @@ import Milestone from '../models/Milestone.js';
 import Contract from '../models/Contract.js';
 import AppError from '../utils/AppError.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import { CONTRACT_STATUS, MILESTONE_STATUS, PAYMENT_STATUS, TRANSACTION_TYPE } from '../utils/constants.js';
+import { CONTRACT_STATUS, MILESTONE_STATUS, PAYMENT_STATUS, TRANSACTION_TYPE, NOTIFICATION_TYPE } from '../utils/constants.js';
+import { notify } from '../services/notificationService.js';
 import { str, parsePagination } from '../utils/validators.js';
 import { generateId, signPayment, verifySignature, TEST_CARDS } from '../services/paymentService.js';
 
@@ -120,6 +121,12 @@ export const verifyPayment = asyncHandler(async (req, res) => {
     await Transaction.updateOne({ _id: tx._id }, { status: PAYMENT_STATUS.FAILED, $unset: { uniqueKey: 1 } });
     throw new AppError('This milestone is no longer waiting for payment', 400);
   }
+
+  await notify(tx.payee, {
+    type: NOTIFICATION_TYPE.MILESTONE_FUNDED,
+    message: `"${milestone.title}" was funded (₹${milestone.amount}). You can start working.`,
+    link: `/contracts/${tx.contract}`,
+  });
 
   res.json({ message: 'Payment verified. Milestone funded.', milestone, transaction: paid });
 });

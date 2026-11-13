@@ -4,11 +4,19 @@ import Contract from '../models/Contract.js';
 import Milestone from '../models/Milestone.js';
 import AppError from '../utils/AppError.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import { BID_STATUS, PROJECT_STATUS } from '../utils/constants.js';
+import { BID_STATUS, PROJECT_STATUS, NOTIFICATION_TYPE } from '../utils/constants.js';
 import { str, parsePagination } from '../utils/validators.js';
 import { createContractFromBid } from '../services/contractService.js';
+import { notify } from '../services/notificationService.js';
 
 const FREELANCER_FIELDS = 'name avatar bio skills hourlyRate ratingAverage ratingCount';
+
+const notifyNewBid = (project, freelancer, bid) =>
+  notify(project.client, {
+    type: NOTIFICATION_TYPE.NEW_BID,
+    message: `${freelancer.name} bid ₹${bid.amount} on "${project.title}"`,
+    link: `/projects/${project._id}`,
+  });
 
 // Checks the bid form: amount, delivery time, cover letter and the optional milestone plan.
 const cleanBidInput = (body) => {
@@ -75,11 +83,13 @@ export const submitBid = asyncHandler(async (req, res) => {
     Object.assign(existing, data, { status: BID_STATUS.PENDING });
     await existing.save();
     await Project.updateOne({ _id: project._id }, { $inc: { bidCount: 1 } });
+    await notifyNewBid(project, req.user, existing);
     return res.status(201).json({ bid: existing });
   }
 
   const bid = await Bid.create({ ...data, project: project._id, freelancer: req.user._id });
   await Project.updateOne({ _id: project._id }, { $inc: { bidCount: 1 } });
+  await notifyNewBid(project, req.user, bid);
   res.status(201).json({ bid });
 });
 
@@ -164,7 +174,7 @@ const getBidForOwner = async (req) => {
 
 // PATCH /api/bids/:id/reject  (project owner, only while PENDING)
 export const rejectBid = asyncHandler(async (req, res) => {
-  const { bid } = await getBidForOwner(req);
+  const { bid, project } = await getBidForOwner(req);
   if (bid.status !== BID_STATUS.PENDING) throw new AppError('Only pending bids can be rejected', 400);
 
   const updated = await Bid.findOneAndUpdate(
@@ -173,6 +183,11 @@ export const rejectBid = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!updated) throw new AppError('This bid is no longer pending', 400);
+  await notify(bid.freelancer, {
+    type: NOTIFICATION_TYPE.BID_REJECTED,
+    message: `Your bid on "${project.title}" was not selected`,
+    link: '/bids',
+  });
   res.json({ bid: updated });
 });
 
@@ -204,10 +219,25 @@ export const acceptBid = asyncHandler(async (req, res) => {
     created = await createContractFromBid(claimed, accepted);
 
     // Step 4: reject every other pending bid on this project.
+    const others = await Bid.find({ project: project._id, _id: { $ne: bid._id }, status: BID_STATUS.PENDING }).select('freelancer');
     await Bid.updateMany(
       { project: project._id, _id: { $ne: bid._id }, status: BID_STATUS.PENDING },
       { status: BID_STATUS.REJECTED }
     );
+
+    // Tell everyone what happened.
+    await notify(accepted.freelancer, {
+      type: NOTIFICATION_TYPE.BID_ACCEPTED,
+      message: `Your bid on "${project.title}" was accepted! The contract has started.`,
+      link: `/contracts/${created.contract._id}`,
+    });
+    for (const o of others) {
+      await notify(o.freelancer, {
+        type: NOTIFICATION_TYPE.BID_REJECTED,
+        message: `Your bid on "${project.title}" was not selected`,
+        link: '/bids',
+      });
+    }
 
     res.json({ bid: accepted, project: claimed, contract: created.contract, milestones: created.milestones });
   } catch (err) {

@@ -1,5 +1,6 @@
 import Contract from '../models/Contract.js';
 import Milestone from '../models/Milestone.js';
+import Conversation from '../models/Conversation.js';
 import { PLATFORM_FEE_PERCENT } from '../utils/constants.js';
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -34,6 +35,13 @@ export const createContractFromBid = async (project, bid) => {
         dueDate: new Date(now + m.dueDays * DAY),
       }))
     );
+    // Open a private chat for the two people (not critical: it is also created on demand).
+    await Conversation.create({
+      contract: contract._id,
+      project: project._id,
+      participants: [project.client, bid.freelancer],
+    }).catch((err) => console.error('Could not create conversation:', err.message));
+
     return { contract, milestones };
   } catch (err) {
     // Do not leave a half-built contract behind.

@@ -9,6 +9,8 @@ import bidRoutes from './routes/bidRoutes.js';
 import contractRoutes from './routes/contractRoutes.js';
 import milestoneRoutes from './routes/milestoneRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
+import conversationRoutes from './routes/conversationRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -31,6 +33,8 @@ app.use('/api/bids', bidRoutes);
 app.use('/api/contracts', contractRoutes);
 app.use('/api/milestones', milestoneRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/conversations', conversationRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

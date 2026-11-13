@@ -2,7 +2,8 @@ import Project from '../models/Project.js';
 import Bid from '../models/Bid.js';
 import AppError from '../utils/AppError.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import { CATEGORIES, PROJECT_STATUS, BID_STATUS } from '../utils/constants.js';
+import { CATEGORIES, PROJECT_STATUS, BID_STATUS, NOTIFICATION_TYPE } from '../utils/constants.js';
+import { notify } from '../services/notificationService.js';
 import { str, escapeRegex, normalizeSkills, parsePagination } from '../utils/validators.js';
 
 const CLIENT_FIELDS = 'name avatar company ratingAverage ratingCount';
@@ -194,7 +195,15 @@ export const closeProject = asyncHandler(async (req, res) => {
   project.status = PROJECT_STATUS.CLOSED;
   await project.save();
   // Closing a project rejects every bid that was still waiting.
+  const waiting = await Bid.find({ project: project._id, status: BID_STATUS.PENDING }).select('freelancer');
   await Bid.updateMany({ project: project._id, status: BID_STATUS.PENDING }, { status: BID_STATUS.REJECTED });
+  for (const b of waiting) {
+    await notify(b.freelancer, {
+      type: NOTIFICATION_TYPE.BID_REJECTED,
+      message: `The project "${project.title}" was closed by the client`,
+      link: '/bids',
+    });
+  }
   res.json({ project });
 });
 

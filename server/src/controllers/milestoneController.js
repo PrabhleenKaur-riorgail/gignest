@@ -5,7 +5,8 @@ import Transaction from '../models/Transaction.js';
 import User from '../models/User.js';
 import AppError from '../utils/AppError.js';
 import asyncHandler from '../utils/asyncHandler.js';
-import { CONTRACT_STATUS, MILESTONE_STATUS, PAYMENT_STATUS, PROJECT_STATUS, TRANSACTION_TYPE } from '../utils/constants.js';
+import { CONTRACT_STATUS, MILESTONE_STATUS, PAYMENT_STATUS, PROJECT_STATUS, TRANSACTION_TYPE, NOTIFICATION_TYPE } from '../utils/constants.js';
+import { notify } from '../services/notificationService.js';
 import { isHttpUrl } from '../utils/validators.js';
 
 // Loads a milestone and its contract, and checks the contract is still active.
@@ -57,6 +58,11 @@ export const submitWork = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!updated) throw new AppError('Work cannot be submitted for this milestone right now', 400);
+  await notify(contract.client, {
+    type: NOTIFICATION_TYPE.WORK_SUBMITTED,
+    message: `${req.user.name} submitted work for "${updated.title}". Please review it.`,
+    link: `/contracts/${contract._id}`,
+  });
   res.json({ milestone: updated });
 });
 
@@ -77,6 +83,11 @@ export const requestRevision = asyncHandler(async (req, res) => {
     { new: true }
   );
   if (!updated) throw new AppError('There is no submitted work to review', 400);
+  await notify(contract.freelancer, {
+    type: NOTIFICATION_TYPE.REVISION_REQUESTED,
+    message: `${req.user.name} asked for changes on "${updated.title}".`,
+    link: `/contracts/${contract._id}`,
+  });
   res.json({ milestone: updated });
 });
 
@@ -135,6 +146,21 @@ export const approveWork = asyncHandler(async (req, res) => {
     await Contract.updateOne({ _id: contract._id, status: CONTRACT_STATUS.ACTIVE }, { status: CONTRACT_STATUS.COMPLETED, completedAt: new Date() });
     await Project.updateOne({ _id: contract.project }, { status: PROJECT_STATUS.COMPLETED });
     contractCompleted = true;
+  }
+
+  await notify(contract.freelancer, {
+    type: NOTIFICATION_TYPE.PAYMENT_RELEASED,
+    message: `₹${net} was added to your wallet for "${approved.title}".`,
+    link: `/contracts/${contract._id}`,
+  });
+  if (contractCompleted) {
+    for (const person of [contract.client, contract.freelancer]) {
+      await notify(person, {
+        type: NOTIFICATION_TYPE.CONTRACT_COMPLETED,
+        message: 'The contract is complete. You can now leave a review.',
+        link: `/contracts/${contract._id}`,
+      });
+    }
   }
 
   res.json({ milestone: released, transaction, contractCompleted });
