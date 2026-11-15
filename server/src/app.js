@@ -11,6 +11,10 @@ import milestoneRoutes from './routes/milestoneRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import conversationRoutes from './routes/conversationRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import reviewRoutes from './routes/reviewRoutes.js';
+import dashboardRoutes from './routes/dashboardRoutes.js';
+import reportRoutes from './routes/reportRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
 const app = express();
@@ -35,6 +39,10 @@ app.use('/api/milestones', milestoneRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/conversations', conversationRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/admin', adminRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

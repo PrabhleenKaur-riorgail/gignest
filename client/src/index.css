@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-mist font-sans text-ink antialiased;
+    line-height: 1.6;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display text-ink;
+    letter-spacing: -0.015em;
+  }
+  :focus-visible {
+    outline: 3px solid #f5b301;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply bg-peacock text-white hover:bg-peacock-deep;
+  }
+  .btn-accent {
+    @apply bg-marigold text-ink hover:bg-marigold-deep;
+  }
+  .btn-outline {
+    @apply border border-line bg-white text-ink hover:border-peacock hover:text-peacock-deep;
+  }
+  .btn-ghost {
+    @apply text-ink hover:bg-peacock-soft;
+  }
+  .input {
+    @apply w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm text-ink placeholder:text-muted/70 focus:border-peacock;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-ink;
+  }
+  .chip {
+    @apply inline-flex items-center rounded-full bg-peacock-soft px-2.5 py-0.5 text-xs font-medium text-peacock-deep;
+  }
+}
+
+/* The one animated moment: the sample contract on the home page fills up once. */
+@keyframes track-fill {
+  from {
+    width: 0;
+  }
+  to {
+    width: 50%;
+  }
+}
+.track-fill {
+  animation: track-fill 1.4s cubic-bezier(0.22, 0.8, 0.3, 1) 0.3s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track-fill {
+    animation: none;
+    width: 50%;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}

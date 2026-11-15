@@ -15,6 +15,11 @@ export const emitToUser = (userId, event, payload) => {
   io.to(room(userId)).emit(event, JSON.parse(JSON.stringify(payload)));
 };
 
+// Immediately disconnects every open tab of a user (used when an admin blocks them).
+export const forceDisconnect = (userId) => {
+  if (io) io.in(room(userId)).disconnectSockets(true);
+};
+
 export const isUserOnline = async (userId) => {
   if (!io) return false;
   const sockets = await io.in(room(userId)).fetchSockets();
