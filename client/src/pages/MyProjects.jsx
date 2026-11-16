@@ -121,6 +121,9 @@ export default function MyProjects() {
               <Link to={`/projects/${p._id}/bids`} className="btn btn-primary">
                 {p.status === 'OPEN' ? 'View and compare bids' : 'View bids'}
               </Link>
+              {(p.status === 'IN_PROGRESS' || p.status === 'COMPLETED') && (
+                <Link to="/contracts" className="btn btn-outline">View contract</Link>
+              )}
               {p.status === 'OPEN' && (
                 <>
                   <Link to={`/projects/${p._id}/edit`} className="btn btn-outline">Edit</Link>

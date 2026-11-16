@@ -112,6 +112,11 @@ export default function MyBids() {
                 <p className="text-sm text-muted">in {bid.deliveryDays} day{bid.deliveryDays === 1 ? '' : 's'}</p>
               </div>
             </div>
+            {bid.status === 'ACCEPTED' && (
+              <div className="mt-4 border-t border-line pt-4">
+                <Link to="/contracts" className="btn btn-primary">Open your contract</Link>
+              </div>
+            )}
             {bid.status === 'PENDING' && (
               <div className="mt-4 border-t border-line pt-4">
                 <ConfirmAction label="Withdraw bid" question="Withdraw this bid?" confirmLabel="Yes, withdraw" onConfirm={() => withdraw(bid)} />

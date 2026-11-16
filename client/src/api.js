@@ -16,11 +16,14 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// If the server says our token is no longer valid, log out everywhere in the app.
+// If the server says our login is no longer valid, log out everywhere in the app.
+// Only react when the failed request was sent WITH the login we hold now. A late answer to an old
+// request (sent before logging out or in again) must never log the current person out.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 && getToken()) {
+    const sentWith = error.config?.headers?.Authorization;
+    if (error.response?.status === 401 && sentWith && sentWith === `Bearer ${getToken()}`) {
       clearToken();
       window.dispatchEvent(new Event('gignest:logout'));
     }

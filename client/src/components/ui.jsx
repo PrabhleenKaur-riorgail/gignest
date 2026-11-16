@@ -46,13 +46,19 @@ const statusStyles = {
   ACCEPTED: 'bg-emerald-100 text-emerald-900',
   REJECTED: 'bg-red-100 text-red-900',
   WITHDRAWN: 'bg-slate-100 text-slate-600',
+  ACTIVE: 'bg-peacock-soft text-peacock-deep',
+  CANCELLED: 'bg-slate-100 text-slate-600',
+  FUNDED: 'bg-peacock-soft text-peacock-deep',
+  SUBMITTED: 'bg-sky-100 text-sky-900',
+  REVISION_REQUESTED: 'bg-orange-100 text-orange-900',
+  RELEASED: 'bg-emerald-100 text-emerald-900',
 };
 
-export function StatusBadge({ status }) {
-  const label = status.replace('_', ' ').toLowerCase();
+export function StatusBadge({ status, label }) {
+  const text = label || status.replace('_', ' ').toLowerCase();
   return (
     <span className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusStyles[status] || 'bg-slate-100'}`}>
-      {label.charAt(0).toUpperCase() + label.slice(1)}
+      {text.charAt(0).toUpperCase() + text.slice(1)}
     </span>
   );
 }

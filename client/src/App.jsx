@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
@@ -14,10 +14,16 @@ import MyProjects from './pages/MyProjects';
 import MyBids from './pages/MyBids';
 import Profile from './pages/Profile';
 import ProfileEdit from './pages/ProfileEdit';
+import Contracts from './pages/Contracts';
+import ContractPage from './pages/ContractPage';
+import ChatPage from './pages/ChatPage';
+import ChatByContract from './pages/ChatByContract';
+import { RealtimeProvider } from './context/RealtimeContext';
 import NotFound from './pages/NotFound';
 
 export default function App() {
   return (
+    <RealtimeProvider>
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<Home />} />
@@ -32,6 +38,9 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="settings/profile" element={<ProfileEdit />} />
+          <Route path="contracts" element={<Contracts />} />
+          <Route path="contracts/:id" element={<ContractPage />} />
+          <Route path="bids" element={<Navigate to="/my-bids" replace />} />
         </Route>
 
         {/* Clients only */}
@@ -42,6 +51,13 @@ export default function App() {
           <Route path="my-projects" element={<MyProjects />} />
         </Route>
 
+        {/* Clients and freelancers: chat */}
+        <Route element={<ProtectedRoute roles={['client', 'freelancer']} />}>
+          <Route path="chat" element={<ChatPage />} />
+          <Route path="chat/contract/:contractId" element={<ChatByContract />} />
+          <Route path="chat/:id" element={<ChatPage />} />
+        </Route>
+
         {/* Freelancers only */}
         <Route element={<ProtectedRoute roles={['freelancer']} />}>
           <Route path="my-bids" element={<MyBids />} />
@@ -50,5 +66,6 @@ export default function App() {
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
+    </RealtimeProvider>
   );
 }

@@ -98,6 +98,7 @@ export default function ProjectBids() {
   const [sort, setSort] = useState('newest');
   const [state, setState] = useState({ loading: true, error: '', project: null, bids: [] });
   const [notice, setNotice] = useState('');
+  const [contractId, setContractId] = useState(null);
   const [actionError, setActionError] = useState('');
 
   const load = useCallback(async () => {
@@ -120,6 +121,7 @@ export default function ProjectBids() {
     setActionError('');
     try {
       const { data } = await api.patch(`/api/bids/${bid._id}/accept`);
+      setContractId(data.contract._id);
       setNotice(
         `Contract started with ${bid.freelancer.name} for ${inr(data.contract.totalAmount)}, split into ${data.milestones.length} milestone${data.milestones.length === 1 ? '' : 's'}.`
       );
@@ -178,7 +180,12 @@ export default function ProjectBids() {
       </div>
 
       <div className="mt-5 space-y-4" aria-live="polite">
-        {notice && <Alert type="success">{notice}</Alert>}
+        {notice && (
+          <Alert type="success">
+            {notice}{' '}
+            {contractId && <Link to={`/contracts/${contractId}`} className="font-semibold underline">Open the contract</Link>}
+          </Alert>
+        )}
         {actionError && <Alert type="error">{actionError}</Alert>}
         {!open && !notice && <Alert type="info">This project is no longer open, so bids can no longer be accepted or rejected.</Alert>}
 

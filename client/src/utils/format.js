@@ -37,3 +37,19 @@ export const initials = (name = '') =>
     .slice(0, 2)
     .map((part) => part[0].toUpperCase())
     .join('');
+
+export const milestoneLabel = (status) =>
+  ({
+    PENDING: 'Waiting for funding',
+    FUNDED: 'Funded, work in progress',
+    SUBMITTED: 'Work submitted',
+    REVISION_REQUESTED: 'Changes requested',
+    APPROVED: 'Approved',
+    RELEASED: 'Paid out',
+  })[status] || status;
+
+// Same sums as the server: the platform keeps a percentage of each released milestone.
+export const payout = (amount, feePercent) => {
+  const fee = Math.round(amount * feePercent) / 100;
+  return { fee, net: Math.round((amount - fee) * 100) / 100 };
+};

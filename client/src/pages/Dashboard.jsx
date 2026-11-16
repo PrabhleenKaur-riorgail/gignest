@@ -161,7 +161,10 @@ export default function Dashboard() {
             {user.role === 'admin' && 'Here is how the whole platform is doing.'}
           </p>
         </div>
-        <Link to="/projects" className="btn btn-outline">Browse projects</Link>
+        <div className="flex flex-wrap gap-2">
+          {user.role !== 'admin' && <Link to="/contracts" className="btn btn-outline">My contracts</Link>}
+          <Link to="/projects" className="btn btn-outline">Browse projects</Link>
+        </div>
       </div>
 
       <div className="mt-8">

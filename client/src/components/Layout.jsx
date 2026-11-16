@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Avatar } from './ui';
+import NotificationBell from './NotificationBell';
+import { useRealtime } from '../context/RealtimeContext';
 
 export function Logo({ light = false }) {
   return (
@@ -19,8 +21,35 @@ export function Logo({ light = false }) {
 const navLink = ({ isActive }) =>
   `rounded-lg px-3 py-2 text-sm font-medium ${isActive ? 'bg-peacock-soft text-peacock-deep' : 'text-ink hover:bg-peacock-soft'}`;
 
+function Toasts() {
+  const { toasts, dismissToast } = useRealtime();
+  const navigate = useNavigate();
+  return (
+    <div aria-live="polite" className="fixed bottom-4 right-4 z-50 flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-2">
+      {toasts.map((t) => (
+        <div key={t.id} role="status" className="flex items-start gap-2 rounded-xl border border-line bg-white p-3 shadow-[0_20px_50px_-20px_rgba(15,42,48,0.45)]">
+          <button
+            type="button"
+            className="flex-1 text-left text-sm hover:text-peacock-deep"
+            onClick={() => {
+              dismissToast(t.id);
+              if (t.link) navigate(t.link);
+            }}
+          >
+            {t.message}
+          </button>
+          <button type="button" aria-label="Dismiss" className="rounded p-1 text-muted hover:bg-mist" onClick={() => dismissToast(t.id)}>
+            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" /></svg>
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function Navbar() {
   const { user, logout } = useAuth();
+  const { unreadMessages } = useRealtime();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
@@ -33,23 +62,26 @@ function Navbar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-mist/95 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-16 max-w-6xl items-center px-4 sm:px-6">
         <Logo />
 
-        <button
-          className="rounded-lg p-2 hover:bg-peacock-soft lg:hidden"
-          aria-label={open ? 'Close menu' : 'Open menu'}
-          aria-expanded={open}
-          onClick={() => setOpen((v) => !v)}
-        >
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
-        </button>
+        <div className="order-3 ml-auto flex items-center gap-1 xl:ml-2">
+          {user && <NotificationBell />}
+          <button
+            className="rounded-lg p-2 hover:bg-peacock-soft xl:hidden"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+            </svg>
+          </button>
+        </div>
 
         <nav
           aria-label="Main"
-          className={`${open ? 'flex' : 'hidden'} absolute left-0 right-0 top-16 flex-col gap-1 border-b border-line bg-mist px-4 pb-4 pt-2 lg:static lg:flex lg:flex-row lg:items-center lg:gap-1 lg:border-0 lg:bg-transparent lg:p-0`}
+          className={`${open ? 'flex' : 'hidden'} absolute left-0 right-0 top-16 flex-col gap-1 border-b border-line bg-mist px-4 pb-4 pt-2 order-2 xl:ml-auto xl:static xl:flex xl:flex-row xl:items-center xl:gap-1 xl:border-0 xl:bg-transparent xl:p-0`}
         >
           <NavLink to="/projects" end className={navLink} onClick={close}>
             Browse projects
@@ -69,12 +101,28 @@ function Navbar() {
               My bids
             </NavLink>
           )}
+          {(user?.role === 'client' || user?.role === 'freelancer') && (
+            <>
+              <NavLink to="/contracts" className={navLink} onClick={close}>
+                Contracts
+              </NavLink>
+              <NavLink to="/chat" className={navLink} onClick={close}>
+                Messages
+                {unreadMessages > 0 && (
+                  <span className="ml-1.5 inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-marigold px-1 text-[11px] font-bold text-ink">
+                    <span className="sr-only">{unreadMessages} unread </span>
+                    <span aria-hidden="true">{unreadMessages > 9 ? '9+' : unreadMessages}</span>
+                  </span>
+                )}
+              </NavLink>
+            </>
+          )}
           {user ? (
             <>
               <NavLink to="/dashboard" className={navLink} onClick={close}>
                 Dashboard
               </NavLink>
-              <div className="mt-2 flex items-center gap-3 border-t border-line pt-3 lg:ml-2 lg:mt-0 lg:border-0 lg:pt-0">
+              <div className="mt-2 flex items-center gap-3 border-t border-line pt-3 xl:ml-2 xl:mt-0 xl:border-0 xl:pt-0">
                 <Link to={`/profile/${user._id}`} onClick={close} className="flex items-center gap-3 rounded-lg hover:opacity-80" aria-label="Your profile">
                   <Avatar name={user.name} src={user.avatar} size="sm" />
                   <span className="leading-tight">
@@ -82,13 +130,13 @@ function Navbar() {
                     <span className="block text-xs capitalize text-muted">{user.role}</span>
                   </span>
                 </Link>
-                <button className="btn btn-outline ml-auto lg:ml-2" onClick={handleLogout}>
+                <button className="btn btn-outline ml-auto xl:ml-2" onClick={handleLogout}>
                   Log out
                 </button>
               </div>
             </>
           ) : (
-            <div className="mt-2 flex gap-2 lg:ml-2 lg:mt-0">
+            <div className="mt-2 flex gap-2 xl:ml-2 xl:mt-0">
               <Link to="/login" className="btn btn-ghost" onClick={close}>
                 Log in
               </Link>
@@ -134,6 +182,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <Toasts />
     </div>
   );
 }
